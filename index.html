@@ -276,10 +276,12 @@ label{font-size:13px;font-weight:700}
     <div class="badge">A</div>
     <h3>Athletic FS Jurnal</h3>
     <p>Murabbiy sifatida kiring. Login va parolni maktab rahbari beradi.</p>
-    <div class="f"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" inputmode="email"></div>
-    <div class="f"><label for="lPass">Parol</label><input id="lPass" type="password" autocomplete="current-password"></div>
+    <div class="f"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
+    <div class="f"><label for="lPass">Parol</label><input id="lPass" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
     <div class="err" id="lErr" hidden></div>
     <button type="submit" class="primary" id="lBtn">Kirish</button>
+    <button type="button" id="lReset" style="background:none;color:var(--muted);font-size:13.5px;padding:6px">Parolni unutdingizmi?</button>
+    <div class="hint" id="lInfo" hidden style="margin:0"></div>
   </form>
 </div>
 
@@ -366,6 +368,13 @@ function startFirebase(){
     $("lBtn").disabled=false;
   });
   $("logoutBtn").onclick=()=>firebase.auth().signOut();
+  $("lReset").onclick=async()=>{
+    const em=$("lEmail").value.trim();$("lErr").hidden=true;$("lInfo").hidden=true;
+    if(!em){$("lErr").textContent="Avval emailingizni yozing, keyin shu tugmani bosing.";$("lErr").hidden=false;return}
+    try{firebase.auth().languageCode="uz";await firebase.auth().sendPasswordResetEmail(em);
+      $("lInfo").textContent="Agar bu email ro‘yxatda bo‘lsa, unga parolni tiklash havolasi yuborildi. Pochtani (va Spam papkasini) tekshiring.";$("lInfo").hidden=false}
+    catch(err){$("lErr").textContent=fbErr(err);$("lErr").hidden=false}
+  };
 }
 
 /* ---------- helpers ---------- */
