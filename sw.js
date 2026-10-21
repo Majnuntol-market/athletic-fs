@@ -1,4 +1,4 @@
-const CACHE = "afs-pro-v5";
+const CACHE = "afs-pro-v6";
 const CORE = ["./", "index.html", "firebase-config.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 const CDN = ["www.gstatic.com", "fonts.googleapis.com", "fonts.gstatic.com"];
 self.addEventListener("install", e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())));
