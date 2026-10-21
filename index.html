@@ -452,8 +452,20 @@ function balChip(s,act){
 }
 const IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.userAgent.includes("Mac")&&navigator.maxTouchPoints>1);
 function normPhone(v){let d=String(v||"").replace(/\D/g,"");if(!d)return"";if(d.length===9)d="998"+d;return"+"+d}
-function remindText(s){const b=balance(s);
-  return`Hurmatli ota-ona! Farzandingiz ${s.first} ${s.last}ning ${MONTHS[CM].toLowerCase()} oyi uchun to‘lovini o‘z vaqtida to‘lashni unutmang. Oylik to‘lov: ${fmt(s.fee)} so‘m.`+(b<0?` Qarzdorlik: ${fmt(-b)} so‘m.`:"")+` Hurmat bilan, Athletic Football School.`}
+/* SMS: faqat oddiy (GSM) belgilar va 160 belgidan oshmasin — aks holda telefon MMS qilib yuboradi */
+const gsm=t=>String(t||"").replace(/[‘’ʻʼ`´]/g,"'").replace(/[“”«»]/g,'"').replace(/[–—]/g,"-").replace(/\u00a0/g," ");
+function remindText(s){
+  const b=balance(s), name=gsm(`${s.first} ${s.last}`).trim(), oy=MONTHS[CM].toLowerCase();
+  const n=v=>String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g," ");
+  const debt=b<0?` Qarz: ${n(-b)} so'm.`:"";
+  const v=[
+    `Hurmatli ota-ona! Farzandingiz ${name}ning ${oy} oyi uchun to'lovini o'z vaqtida to'lashni unutmang.${debt} Athletic Football School`,
+    `Hurmatli ota-ona! Farzandingiz ${name}ning ${oy} oyi to'lovini o'z vaqtida to'lang.${debt} Athletic Football School`,
+    `Hurmatli ota-ona! ${name}ning ${oy} oyi to'lovini o'z vaqtida to'lang.${debt} Athletic FS`,
+    `${name}: ${oy} oyi to'lovini to'lang.${debt} Athletic FS`
+  ];
+  return gsm(v.find(t=>gsm(t).length<=160)||v[3]).slice(0,160);
+}
 const IC_SMS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>';
 function remindBtns(s){
   const ph=normPhone(s.phone);
