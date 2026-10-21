@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Athletic FS Jurnal</title>
+<meta name="theme-color" content="#1f6b3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Athletic FS">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: phone app — green club header, scrolling view, fixed bottom tab bar; payments grid scrolls sideways with a sticky name column */
+:root{
+  --bg:#eef2ec; --surface:#ffffff; --sunk:#f3f6f1; --line:#dbe3d6;
+  --fg:#16211a; --muted:#647266;
+  --pitch:#1f6b3a; --pitch-ink:#ffffff; --lime:#d4f03c; --lime-ink:#17330f;
+  --ok:#1e9a4c; --ok-bg:#dff3e5; --bad:#d23a2c; --bad-bg:#fbe3df; --none:#e6ebe3;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1611; --surface:#18221b; --sunk:#121a14; --line:#2a372d; --fg:#e8efe8; --muted:#93a396;
+  --pitch:#1d5c33; --pitch-ink:#f2fff4; --lime:#cbe83a; --lime-ink:#17330f;
+  --ok:#4fcf7f; --ok-bg:#173524; --bad:#ff6f61; --bad-bg:#3d1c19; --none:#222d25; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1611; --surface:#18221b; --sunk:#121a14; --line:#2a372d; --fg:#e8efe8; --muted:#93a396;
+  --pitch:#1d5c33; --pitch-ink:#f2fff4; --lime:#cbe83a; --lime-ink:#17330f;
+  --ok:#4fcf7f; --ok-bg:#173524; --bad:#ff6f61; --bad-bg:#3d1c19; --none:#222d25; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;-webkit-tap-highlight-color:transparent}
+img{max-width:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--pitch)}
+.pad{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--pitch);color:var(--pitch-ink)}
+header .inner{max-width:720px;margin:0 auto;display:flex;gap:12px;align-items:center;padding-block:14px}
+header .inner>div:nth-child(2){flex:1;min-width:0}
+.logout{background:transparent;color:var(--pitch-ink);border:1px solid color-mix(in srgb,var(--pitch-ink) 35%,transparent);font-size:12.5px;padding:7px 10px;flex:none}
+.badge{flex:none;width:44px;height:44px;border-radius:12px;background:var(--lime);color:var(--lime-ink);display:grid;place-items:center;font:800 20px var(--f-display)}
+h1{font:800 clamp(15px,4.3vw,19px)/1.15 var(--f-display);margin:0;letter-spacing:.01em}
+.sub{font-size:12.5px;opacity:.85}
+main{max-width:720px;margin:0 auto;padding-block:16px calc(96px + env(safe-area-inset-bottom,0px))}
+h2{font:800 17px var(--f-body);margin:22px 0 10px}
+h2:first-child{margin-top:4px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.stat .k{font-size:12px;color:var(--muted);font-weight:700}
+.stat .v{font:800 24px var(--f-display);font-variant-numeric:tabular-nums;margin-top:2px}
+.stat.g .v{color:var(--ok)} .stat.r .v{color:var(--bad)}
+.money{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-top:10px}
+.money .row{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;color:var(--muted);flex-wrap:wrap}
+.money b{color:var(--fg);font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:8px;background:var(--bad-bg);margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .4s}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.chart svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:10px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-size:14px}
+th{font-size:12px;color:var(--muted);font-weight:700;background:var(--sunk)}
+th:first-child,td:first-child{text-align:left}
+tr:last-child td{border-bottom:0}
+td.g{color:var(--ok);font-weight:800} td.r{color:var(--bad);font-weight:800}
+tr.now td{background:color-mix(in srgb,var(--lime) 16%,transparent)}
+.tools{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:12px}
+input,select{font:600 16px var(--f-body);color:var(--fg);background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;min-width:0}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--pitch);outline-offset:1px}
+button{font:700 15px var(--f-body);border:0;border-radius:12px;padding:12px 16px;cursor:pointer;color:var(--fg);background:var(--sunk)}
+.list{display:flex;flex-direction:column;gap:8px}
+.st{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center}
+.av{width:48px;height:48px;border-radius:12px;background:var(--lime);color:var(--lime-ink);display:grid;place-items:center;font:800 15px var(--f-display);overflow:hidden;flex:none}
+.av img{width:100%;height:100%;object-fit:cover}
+.av.sm{width:34px;height:34px;border-radius:9px;font-size:11px}
+.who{min-width:0;cursor:pointer}
+.nm{font-weight:800;overflow-wrap:anywhere}
+.meta{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;color:#fff}
+.dot.g{background:var(--ok)} .dot.r{background:var(--bad)}
+.icon-btn{width:40px;height:40px;padding:0;display:grid;place-items:center;border-radius:10px;background:var(--sunk);color:var(--bad)}
+.icon-btn svg{width:19px;height:19px}
+.empty{text-align:center;color:var(--muted);padding:28px 16px;border:1px dashed var(--line);border-radius:var(--r);background:var(--surface)}
+/* payments grid */
+.yearbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.yearbar b{font:800 18px var(--f-display)}
+.yearbar button{width:42px;height:42px;padding:0;font-size:20px}
+.grid td,.grid th{padding:6px;text-align:center;border-bottom:1px solid var(--line)}
+.grid th{position:sticky;top:0}
+.grid .namecol{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;border-right:1px solid var(--line);min-width:150px;max-width:170px}
+.grid th.namecol{background:var(--sunk);z-index:3}
+.grid th.cur{color:var(--fg);background:color-mix(in srgb,var(--lime) 35%,var(--sunk))}
+.nc{display:flex;gap:8px;align-items:center}
+.nc span{font-weight:700;font-size:13px;white-space:normal;line-height:1.2;overflow-wrap:anywhere}
+.cell{width:38px;height:38px;border-radius:10px;padding:0;display:grid;place-items:center;font-weight:800;font-size:16px;margin:auto}
+.cell.g{background:var(--ok);color:#fff}
+.cell.r{background:var(--bad);color:#fff}
+.cell.f{background:var(--none);color:var(--muted);border:1px dashed var(--line)}
+.cell.n{background:transparent;color:var(--muted);cursor:default}
+.hint{font-size:12.5px;color:var(--muted);margin-top:8px}
+/* tab bar */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+nav.tabs button{background:none;border-radius:0;padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--muted)}
+nav.tabs button svg{width:23px;height:23px}
+nav.tabs button[aria-selected="true"]{color:var(--pitch)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) nav.tabs button[aria-selected="true"]{color:var(--lime)}}
+:root[data-theme="dark"] nav.tabs button[aria-selected="true"]{color:var(--lime)}
+.fab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;padding:0;background:var(--lime);color:var(--lime-ink);display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:24}
+.fab svg{width:26px;height:26px}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(5,12,7,.5);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;border-radius:20px 20px 0 0;max-height:92%;overflow:auto;padding-block:18px calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet h3{font:800 16px var(--f-display);margin:0 0 14px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f.full{grid-column:1/-1}
+label{font-size:13px;font-weight:700}
+.req{color:var(--bad)}
+.photo{display:flex;gap:12px;align-items:center}
+.ph{flex:none;width:76px;height:76px;border-radius:16px;background:var(--sunk);border:1.5px dashed var(--line);display:grid;place-items:center;color:var(--muted);overflow:hidden;cursor:pointer;padding:0}
+.ph img{width:100%;height:100%;object-fit:cover}
+.ph svg{width:28px;height:28px}
+.phbtns{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}
+.lbtn{display:block;text-align:center;font:700 14px var(--f-body);border-radius:12px;padding:11px 12px;cursor:pointer;background:var(--sunk);color:var(--fg);border:1px solid var(--line)}
+.lbtn.primary{background:var(--pitch);color:var(--pitch-ink);border-color:var(--pitch)}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.photo{position:relative}
+.photo:has(.vh:focus-visible) .lbtn.primary{outline:2px solid var(--pitch);outline-offset:2px}
+.btns{grid-column:1/-1;display:flex;gap:10px}
+.primary{background:var(--pitch);color:var(--pitch-ink);flex:1}
+.danger{background:var(--bad);color:#fff;flex:1}
+.err{grid-column:1/-1;color:var(--bad);font-size:13px;font-weight:700}
+.confirm p{margin:0 0 16px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:50;white-space:nowrap}
+.note{font-size:12px;color:var(--muted);margin-top:14px}
+@media (max-width:360px){.form{grid-template-columns:1fr}.stat .v{font-size:20px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* in-app camera */
+.cammodal{position:fixed;inset:0;z-index:60;background:#000;display:flex;flex-direction:column}
+.camview{position:relative;flex:1;overflow:hidden;display:grid;place-items:center}
+.camview video,.camview img{width:100%;height:100%;object-fit:cover}
+.camview video.mirror{transform:scaleX(-1)}
+.guide{position:absolute;width:min(78vw,60vh);aspect-ratio:1;max-width:100%;border:3px solid rgba(255,255,255,.9);border-radius:22px;box-shadow:0 0 0 100vmax rgba(0,0,0,.45);pointer-events:none}
+.camtop{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:0;right:0;display:flex;justify-content:space-between;padding-inline:16px;z-index:2;color:#fff;font-weight:700;align-items:center}
+.camtop button{background:rgba(0,0,0,.45);color:#fff;width:44px;height:44px;border-radius:50%;padding:0;font-size:20px}
+.cambar{background:#000;display:flex;align-items:center;justify-content:space-around;padding:18px 16px calc(22px + env(safe-area-inset-bottom,0px))}
+.cambar button{background:rgba(255,255,255,.14);color:#fff;border-radius:999px;min-width:96px}
+.shutter{width:76px!important;min-width:76px!important;height:76px;border-radius:50%!important;padding:0;background:#fff!important;border:5px solid rgba(255,255,255,.35)!important;background-clip:padding-box!important}
+.shutter:active{transform:scale(.94)}
+.cambar .use{background:var(--lime);color:var(--lime-ink)}
+.camerr{color:#fff;text-align:center;padding:24px;max-width:340px;line-height:1.5}
+/* login */
+.login{position:fixed;inset:0;z-index:70;background:var(--bg);display:grid;place-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.login form{width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px}
+.login .badge{margin-bottom:4px}
+.login h3{font:800 18px var(--f-display);margin:0}
+.login p{margin:0 0 4px;color:var(--muted);font-size:13.5px}
+</style>
+</head>
+<body>
+
+<header><div class="inner pad">
+  <div class="badge">A</div>
+  <div><h1>ATHLETIC FOOTBALL SCHOOL</h1><div class="sub" id="hdrSub">O‘quvchilar va to‘lovlar jurnali</div></div>
+  <button class="logout" id="logoutBtn" hidden>Chiqish</button>
+</div></header>
+
+<main class="pad">
+  <!-- UMUMIY -->
+  <section id="v-home">
+    <h2 id="homeTitle">Shu oy</h2>
+    <div class="stats">
+      <div class="stat"><div class="k">Jami o‘quvchi</div><div class="v" id="sTotal">0</div></div>
+      <div class="stat g"><div class="k">To‘lagan</div><div class="v" id="sPaid">0</div></div>
+      <div class="stat r"><div class="k">To‘lamagan</div><div class="v" id="sUnpaid">0</div></div>
+    </div>
+    <div class="money">
+      <div class="row"><span>Yig‘ildi: <b id="mGot">0</b> so‘m</span><span>Qarz: <b id="mDebt">0</b> so‘m</span></div>
+      <div class="bar"><i id="mBar"></i></div>
+    </div>
+    <h2>O‘quvchilar soni, <span id="chartYear"></span></h2>
+    <div class="panel chart"><div id="chart"></div>
+      <div class="legend"><span style="--c:var(--ok)">To‘lagan</span><span style="--c:var(--bad)">To‘lamagan</span></div></div>
+    <h2>Oylar bo‘yicha jadval</h2>
+    <div class="tscroll"><table id="monthTable"></table></div>
+    <div class="note" id="storeNote"></div>
+  </section>
+
+  <!-- O'QUVCHILAR -->
+  <section id="v-students" hidden>
+    <h2>O‘quvchilar ro‘yxati</h2>
+    <div class="tools">
+      <input id="q" type="search" placeholder="Ism yoki familiya bo‘yicha qidirish">
+      <select id="filter" aria-label="Saralash"><option value="all">Barchasi</option><option value="paid">To‘lagan</option><option value="unpaid">To‘lamagan</option></select>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="hint">Yashil ✓ — shu oy to‘lagan, qizil ✕ — to‘lamagan. Ismni bossangiz, tahrirlash oynasi ochiladi.</div>
+  </section>
+
+  <!-- TO'LOVLAR -->
+  <section id="v-pay" hidden>
+    <div class="yearbar"><button id="yPrev" aria-label="Oldingi yil">‹</button><b id="yLbl"></b><button id="yNext" aria-label="Keyingi yil">›</button></div>
+    <div class="tscroll" id="gridWrap"></div>
+    <div class="hint">Katakchani bossangiz, to‘lov belgilanadi yoki bekor qilinadi. Kulrang — kelgusi oy, «·» — o‘quvchi hali qo‘shilmagan.</div>
+  </section>
+</main>
+
+<button class="fab" id="addBtn" aria-label="Yangi o‘quvchi qo‘shish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+
+<nav class="tabs" role="tablist"><div class="in">
+  <button role="tab" data-v="home" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Umumiy</button>
+  <button role="tab" data-v="students" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14c2.8 0 4.5 1.9 4.5 5"/></svg>O‘quvchilar</button>
+  <button role="tab" data-v="pay" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4M8 14l2 2 4-4"/></svg>To‘lovlar</button>
+</div></nav>
+
+<div class="scrim" id="sheetScrim" hidden>
+  <div class="sheet pad" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h3 id="sheetTitle">Yangi o‘quvchi</h3>
+    <form class="form" id="form" novalidate>
+      <div class="f full"><label for="photo">Surati</label>
+        <div class="photo">
+          <button type="button" class="ph" id="phBox" aria-label="Kamerani ochish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+          <div class="phbtns"><button type="button" class="lbtn primary" id="camBtn">Suratga olish</button><label for="photo" class="lbtn" id="galBtn">Galereyadan</label></div>
+          <input id="cam" class="vh" type="file" accept="image/*" capture="environment">
+          <input id="photo" class="vh" type="file" accept="image/*">
+        </div>
+      </div>
+      <div class="f"><label for="first">Ismi <span class="req">*</span></label><input id="first" placeholder="Ali" autocomplete="off"></div>
+      <div class="f"><label for="last">Familiyasi <span class="req">*</span></label><input id="last" placeholder="Karimov" autocomplete="off"></div>
+      <div class="f"><label for="year">Tug‘ilgan yili <span class="req">*</span></label><input id="year" type="number" inputmode="numeric" placeholder="2015"></div>
+      <div class="f"><label for="fee">Oylik to‘lov (so‘m) <span class="req">*</span></label><input id="fee" type="number" inputmode="numeric" value="200000" step="1000"></div>
+      <div class="f"><label for="joined">Qo‘shilgan oy</label><input id="joined" type="month"></div>
+      <div class="f"><label for="pay">Shu oy to‘lovi</label><select id="pay"><option value="0">To‘lanmagan</option><option value="1">To‘langan</option></select></div>
+      <div class="err" id="err" hidden></div>
+      <div class="btns"><button type="button" id="cancelBtn">Bekor qilish</button><button type="submit" class="primary" id="saveBtn">Saqlash</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="scrim" id="confirmScrim" hidden>
+  <div class="sheet pad confirm" role="dialog" aria-modal="true" aria-labelledby="cTitle">
+    <h3 id="cTitle">O‘quvchini o‘chirish</h3>
+    <p id="cText"></p>
+    <div class="btns"><button type="button" id="cNo">Bekor qilish</button><button type="button" class="danger" id="cYes">Ha, o‘chirish</button></div>
+  </div>
+</div>
+<div class="cammodal" id="camModal" hidden role="dialog" aria-label="Kamera">
+  <div class="camview">
+    <video id="camVideo" playsinline autoplay muted></video>
+    <img id="camShot" alt="Olingan surat" hidden>
+    <div class="guide" id="camGuide"></div>
+    <div class="camerr" id="camErr" hidden></div>
+    <div class="camtop"><button type="button" id="camClose" aria-label="Yopish">✕</button><span>Yuzni ramkaga joylang</span><button type="button" id="camFlip" aria-label="Kamerani almashtirish">⟲</button></div>
+  </div>
+  <div class="cambar" id="camLive"><button type="button" class="shutter" id="camSnap" aria-label="Suratga olish"></button></div>
+  <div class="cambar" id="camReview" hidden><button type="button" id="camRetake">Qayta olish</button><button type="button" class="use" id="camUse">Joylash</button></div>
+</div>
+
+<div class="login" id="login" hidden>
+  <form id="loginForm" novalidate>
+    <div class="badge">A</div>
+    <h3>Athletic FS Jurnal</h3>
+    <p>Murabbiy sifatida kiring. Login va parolni maktab rahbari beradi.</p>
+    <div class="f"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" inputmode="email"></div>
+    <div class="f"><label for="lPass">Parol</label><input id="lPass" type="password" autocomplete="current-password"></div>
+    <div class="err" id="lErr" hidden></div>
+    <button type="submit" class="primary" id="lBtn">Kirish</button>
+  </form>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const MONTHS=["Yanvar","Fevral","Mart","Aprel","May","Iyun","Iyul","Avgust","Sentabr","Oktabr","Noyabr","Dekabr"];
+const MS=["Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"];
+const now=new Date(), CY=now.getFullYear(), CM=now.getMonth();
+const key=(y,m)=>y+"-"+String(m+1).padStart(2,"0");
+const MKEY=key(CY,CM);
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(Number(n||0)).toLocaleString("ru-RU").replace(/ /g," ");
+const esc=t=>{const d=document.createElement("div");d.textContent=t??"";return d.innerHTML};
+let students=[], store, viewYear=CY, editId=null, photoData="", delId=null;
+
+$("homeTitle").textContent=MONTHS[CM]+" "+CY;
+$("hdrSub").textContent="O‘quvchilar va to‘lovlar · "+MONTHS[CM]+" "+CY;
+$("joined").value=MKEY;
+
+/* ---------- storage: Firebase (shared) or this phone ---------- */
+const LS="afs_pro_students";
+const lsRead=()=>{try{return JSON.parse(localStorage.getItem(LS)||"[]")}catch(e){return []}};
+const lsWrite=a=>{try{localStorage.setItem(LS,JSON.stringify(a))}catch(e){toast("Saqlab bo‘lmadi: telefon xotirasi to‘lgan")}};
+const local={
+  start(){students=lsRead();renderAll()},
+  async save(id,data){const a=lsRead();const i=a.findIndex(s=>s.id===id);if(i>=0)a[i]={...data,id};else a.push({...data,id});lsWrite(a);students=a;renderAll()},
+  async remove(id){const a=lsRead().filter(s=>s.id!==id);lsWrite(a);students=a;renderAll()}
+};
+store=local;
+const fbErr=e=>{const c=(e&&e.code)||"";
+  if(c.includes("permission-denied"))return "Ruxsat yo‘q. Firebase qoidalarini tekshiring.";
+  if(c.includes("unavailable"))return "Internet yo‘q. O‘zgarishlar internet kelganda yuboriladi.";
+  if(c.includes("wrong-password")||c.includes("invalid-credential")||c.includes("user-not-found")||c.includes("invalid-login"))return "Email yoki parol noto‘g‘ri.";
+  if(c.includes("invalid-email"))return "Email noto‘g‘ri yozilgan.";
+  if(c.includes("too-many-requests"))return "Juda ko‘p urinish. Birozdan keyin qayta urinib ko‘ring.";
+  if(c.includes("network"))return "Internet bilan aloqa yo‘q.";
+  return "Xato: "+(c||((e&&e.message)||"noma’lum"));};
+
+function startFirebase(){
+  const cfg=window.FIREBASE_CONFIG;
+  if(!cfg||!cfg.apiKey||!window.firebase){
+    $("storeNote").textContent=cfg&&cfg.apiKey?"Firebase yuklanmadi (internet yo‘q). Ma’lumotlar shu telefonda saqlanmoqda.":"Ma’lumotlar shu telefonda saqlanmoqda. Umumiy baza uchun firebase-config.js faylini to‘ldiring.";
+    local.start();return;
+  }
+  firebase.initializeApp(cfg);
+  const fdb=firebase.firestore();
+  try{fdb.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(e){}
+  const col=fdb.collection("students");
+  let unsub=null;
+  const cloud={
+    async save(id,data){
+      const i=students.findIndex(s=>s.id===id);const row={...data,id};
+      if(i>=0)students[i]=row;else students.push(row);renderAll();
+      col.doc(id).set(data).catch(e=>toast(fbErr(e)));
+    },
+    async remove(id){
+      students=students.filter(s=>s.id!==id);renderAll();
+      col.doc(id).delete().catch(e=>toast(fbErr(e)));
+    }
+  };
+  firebase.auth().onAuthStateChanged(u=>{
+    if(unsub){unsub();unsub=null}
+    if(!u){$("login").hidden=false;$("logoutBtn").hidden=true;students=[];renderAll();return}
+    $("login").hidden=true;$("logoutBtn").hidden=false;store=cloud;
+    $("storeNote").textContent="Umumiy bazaga ulangan: "+u.email+". Internet bo‘lmasa ham ishlaydi, keyin o‘zi yuboradi.";
+    unsub=col.onSnapshot(snap=>{students=snap.docs.map(d=>({...d.data(),id:d.id}));renderAll()},
+      e=>{$("storeNote").textContent=fbErr(e)});
+  });
+  $("loginForm").addEventListener("submit",async e=>{
+    e.preventDefault();$("lErr").hidden=true;$("lBtn").disabled=true;
+    try{await firebase.auth().signInWithEmailAndPassword($("lEmail").value.trim(),$("lPass").value)}
+    catch(err){$("lErr").textContent=fbErr(err);$("lErr").hidden=false}
+    $("lBtn").disabled=false;
+  });
+  $("logoutBtn").onclick=()=>firebase.auth().signOut();
+}
+
+/* ---------- helpers ---------- */
+const joinedKey=s=>s.joined||key(CY,CM);
+const paidIn=(s,k)=>!!(s.payments&&s.payments[k]);
+const activeIn=(s,k)=>joinedKey(s)<=k;
+const initials=s=>esc(((s.first||"?")[0]+((s.last||"")[0]||"")).toUpperCase());
+const avatar=(s,cls="")=>`<div class="av ${cls}">${s.photo?`<img src="${esc(s.photo)}" alt="">`:initials(s)}</div>`;
+const sorted=()=>[...students].sort((a,b)=>(a.last+" "+a.first).localeCompare(b.last+" "+b.first));
+
+function monthStats(y,m){
+  const k=key(y,m);const act=students.filter(s=>activeIn(s,k));const paid=act.filter(s=>paidIn(s,k));
+  const due=act.reduce((a,s)=>a+Number(s.fee||0),0), got=paid.reduce((a,s)=>a+Number(s.fee||0),0);
+  return{k,total:act.length,paid:paid.length,unpaid:act.length-paid.length,due,got};
+}
+
+/* ---------- render ---------- */
+function renderAll(){renderHome();renderList();renderGrid()}
+
+function renderHome(){
+  const st=monthStats(CY,CM);
+  $("sTotal").textContent=st.total;$("sPaid").textContent=st.paid;$("sUnpaid").textContent=st.unpaid;
+  $("mGot").textContent=fmt(st.got);$("mDebt").textContent=fmt(st.due-st.got);
+  $("mBar").style.width=(st.due?st.got/st.due*100:0)+"%";
+  $("chartYear").textContent=CY;
+  const rows=MONTHS.map((_,m)=>m<=CM?monthStats(CY,m):null);
+  // chart
+  const W=340,H=190,L=26,B=24,T=12,R=6,bw=(W-L-R)/12;
+  const max=Math.max(4,...rows.filter(Boolean).map(r=>r.total));
+  const step=max<=8?2:max<=20?5:max<=50?10:Math.ceil(max/50)*10;
+  const top=Math.ceil(max/step)*step, y=v=>T+(H-T-B)*(1-v/top);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Oylar bo‘yicha o‘quvchilar soni">`;
+  for(let v=0;v<=top;v+=step)svg+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-5}" y="${y(v)+4}" font-size="10" text-anchor="end" fill="var(--muted)">${v}</text>`;
+  rows.forEach((r,m)=>{
+    const x=L+m*bw+bw*.18,w=bw*.64;
+    svg+=`<text x="${L+m*bw+bw/2}" y="${H-7}" font-size="9.5" text-anchor="middle" fill="${m===CM?"var(--fg)":"var(--muted)"}" font-weight="${m===CM?800:500}">${MS[m]}</text>`;
+    if(!r||!r.total)return;
+    svg+=`<rect x="${x}" y="${y(r.paid)}" width="${w}" height="${y(0)-y(r.paid)}" fill="var(--ok)" rx="2"/>`;
+    svg+=`<rect x="${x}" y="${y(r.total)}" width="${w}" height="${y(r.paid)-y(r.total)}" fill="var(--bad)" rx="2"/>`;
+    svg+=`<text x="${x+w/2}" y="${y(r.total)-3}" font-size="10" font-weight="800" text-anchor="middle" fill="var(--fg)">${r.total}</text>`;
+  });
+  $("chart").innerHTML=svg+"</svg>";
+  // table
+  let t=`<thead><tr><th>Oy</th><th>Jami</th><th style="color:var(--ok)">✓</th><th style="color:var(--bad)">✕</th><th>Yig‘ildi</th></tr></thead><tbody>`;
+  for(let m=CM;m>=0;m--){const r=rows[m];
+    t+=`<tr class="${m===CM?"now":""}"><td>${MONTHS[m]}</td><td>${r.total}</td><td class="g">${r.paid}</td><td class="r">${r.unpaid}</td><td>${fmt(r.got)}</td></tr>`}
+  $("monthTable").innerHTML=t+"</tbody>";
+}
+
+function renderList(){
+  const q=$("q").value.trim().toLowerCase(),f=$("filter").value;
+  const rows=sorted().filter(s=>{
+    if(q&&!(s.first+" "+s.last).toLowerCase().includes(q))return false;
+    const p=paidIn(s,MKEY);if(f==="paid"&&!p)return false;if(f==="unpaid"&&p)return false;return true});
+  const L=$("list");
+  if(!students.length){L.innerHTML='<div class="empty">Hali o‘quvchi yo‘q. Pastdagi yashil «+» tugmasi bilan birinchi o‘quvchini qo‘shing.</div>';return}
+  if(!rows.length){L.innerHTML='<div class="empty">Hech kim topilmadi.</div>';return}
+  L.innerHTML=rows.map(s=>{const p=paidIn(s,MKEY);return `<div class="st" data-id="${esc(s.id)}">
+    ${avatar(s)}
+    <div class="who" data-act="edit"><div class="nm">${esc(s.first)} ${esc(s.last)}</div>
+      <div class="meta">${esc(s.year)} y.t. · ${fmt(s.fee)} so‘m/oy</div></div>
+    <div class="dot ${p?"g":"r"}" title="${p?"To‘lagan":"To‘lamagan"}" aria-label="${p?"To‘lagan":"To‘lamagan"}">${p?"✓":"✕"}</div>
+    <button class="icon-btn" data-act="del" aria-label="O‘chirish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+  </div>`}).join("");
+}
+
+function renderGrid(){
+  $("yLbl").textContent=viewYear;$("yNext").disabled=viewYear>=CY+1;
+  const W=$("gridWrap");
+  if(!students.length){W.innerHTML='<div class="empty" style="border:0">O‘quvchi qo‘shilgach, shu yerda oyma-oy to‘lov jadvali chiqadi.</div>';return}
+  let h=`<table class="grid"><thead><tr><th class="namecol">O‘quvchi</th>`;
+  MS.forEach((n,m)=>h+=`<th class="${viewYear===CY&&m===CM?"cur":""}">${n}</th>`);
+  h+=`</tr></thead><tbody>`;
+  sorted().forEach(s=>{
+    h+=`<tr><td class="namecol"><div class="nc">${avatar(s,"sm")}<span>${esc(s.first)} ${esc(s.last)}</span></div></td>`;
+    for(let m=0;m<12;m++){const k=key(viewYear,m);
+      let c,txt,lab;
+      if(!activeIn(s,k)){h+=`<td><button class="cell n" disabled aria-label="Qo‘shilmagan">·</button></td>`;continue}
+      if(paidIn(s,k)){c="g";txt="✓";lab="to‘langan"}
+      else if(k>MKEY){c="f";txt="";lab="kelgusi oy"}
+      else{c="r";txt="✕";lab="to‘lanmagan"}
+      h+=`<td><button class="cell ${c}" data-id="${esc(s.id)}" data-k="${k}" aria-label="${esc(s.first)}, ${MONTHS[m]}: ${lab}">${txt}</button></td>`}
+    h+=`</tr>`});
+  W.innerHTML=h+"</tbody></table>";
+  if(viewYear===CY){const cur=W.querySelector("th.cur");if(cur)W.scrollLeft=Math.max(0,cur.offsetLeft-200)}
+}
+
+/* ---------- events ---------- */
+$("q").addEventListener("input",renderList);$("filter").addEventListener("change",renderList);
+$("yPrev").onclick=()=>{viewYear--;renderGrid()};$("yNext").onclick=()=>{viewYear++;renderGrid()};
+
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("nav.tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  ["home","students","pay"].forEach(v=>$("v-"+v).hidden=v!==b.dataset.v);
+  scrollTo(0,0);
+}));
+
+$("gridWrap").addEventListener("click",async e=>{
+  const b=e.target.closest("button.cell[data-id]");if(!b)return;
+  const s=students.find(x=>x.id===b.dataset.id);if(!s)return;
+  const k=b.dataset.k,pay={...(s.payments||{})};
+  if(pay[k])delete pay[k];else pay[k]=true;
+  const {id,...rest}=s;
+  try{await store.save(id,{...rest,payments:pay});toast(pay[k]?"To‘lov belgilandi":"To‘lov bekor qilindi")}
+  catch(err){toast("Saqlanmadi, internetni tekshiring")}
+});
+
+$("list").addEventListener("click",e=>{
+  const t=e.target.closest("[data-act]");if(!t)return;
+  const s=students.find(x=>x.id===t.closest(".st").dataset.id);if(!s)return;
+  if(t.dataset.act==="edit")openSheet(s);
+  else{delId=s.id;$("cText").textContent=`${s.first} ${s.last} va uning barcha to‘lov tarixi o‘chiriladi. Buni qaytarib bo‘lmaydi.`;$("confirmScrim").hidden=false}
+});
+$("cNo").onclick=()=>{$("confirmScrim").hidden=true;delId=null};
+$("confirmScrim").addEventListener("click",e=>{if(e.target.id==="confirmScrim")$("cNo").click()});
+$("cYes").onclick=async()=>{const id=delId;$("confirmScrim").hidden=true;delId=null;
+  try{await store.remove(id);toast("O‘quvchi o‘chirildi")}catch(e){toast("O‘chirilmadi, qayta urinib ko‘ring")}};
+
+/* ---------- add / edit sheet ---------- */
+const camIcon=$("phBox").innerHTML;
+function setPhoto(d){photoData=d;$("phBox").innerHTML=d?`<img src="${d}" alt="">`:camIcon}
+function openSheet(s){
+  editId=s?s.id:null;$("err").hidden=true;$("form").reset();$("photo").value="";$("cam").value="";
+  $("sheetTitle").textContent=s?"O‘quvchini tahrirlash":"Yangi o‘quvchi";
+  $("first").value=s?.first||"";$("last").value=s?.last||"";$("year").value=s?.year||"";
+  $("fee").value=s?.fee??200000;$("joined").value=s?joinedKey(s):MKEY;$("pay").value=s&&paidIn(s,MKEY)?"1":"0";
+  setPhoto(s?.photo||"");$("sheetScrim").hidden=false;
+}
+$("addBtn").onclick=()=>openSheet(null);
+$("cancelBtn").onclick=()=>{$("sheetScrim").hidden=true};
+$("sheetScrim").addEventListener("click",e=>{if(e.target.id==="sheetScrim")$("sheetScrim").hidden=true});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("camModal").hidden){closeCamera();return}$("sheetScrim").hidden=true;$("confirmScrim").hidden=true}});
+$("cam").addEventListener("change",e=>handlePhoto(e.target));
+/* in-app camera */
+let camStream=null, facing="environment", shot="";
+const camSupported=()=>!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)&&window.isSecureContext;
+async function openCamera(){
+  if(!camSupported()){$("cam").click();return}
+  $("camModal").hidden=false;showLive();await startStream();
+}
+async function startStream(){
+  stopStream();$("camErr").hidden=true;$("camGuide").hidden=false;
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:1280}},audio:false});
+    const v=$("camVideo");v.srcObject=camStream;v.classList.toggle("mirror",facing==="user");await v.play().catch(()=>{});
+  }catch(e){
+    $("camGuide").hidden=true;$("camErr").hidden=false;
+    $("camErr").textContent=(e&&e.name==="NotAllowedError")?"Kameraga ruxsat berilmagan. Telefon sozlamalarida brauzerga kamera ruxsatini yoqing yoki «Galereyadan» tugmasidan foydalaning.":"Kamerani ochib bo‘lmadi. «Galereyadan» tugmasidan foydalaning.";
+  }
+}
+function stopStream(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}}
+function closeCamera(){stopStream();$("camModal").hidden=true}
+function showLive(){$("camLive").hidden=false;$("camReview").hidden=true;$("camShot").hidden=true;$("camVideo").hidden=false;$("camGuide").hidden=false}
+$("phBox").onclick=openCamera;$("camBtn").onclick=openCamera;
+$("camClose").onclick=closeCamera;
+$("camFlip").onclick=()=>{facing=facing==="environment"?"user":"environment";startStream()};
+$("camSnap").onclick=()=>{
+  const v=$("camVideo");if(!v.videoWidth)return;
+  const S=260,c=document.createElement("canvas");c.width=c.height=S;const x=c.getContext("2d");
+  const m=Math.min(v.videoWidth,v.videoHeight);
+  if(facing==="user"){x.translate(S,0);x.scale(-1,1)}
+  x.drawImage(v,(v.videoWidth-m)/2,(v.videoHeight-m)/2,m,m,0,0,S,S);
+  shot=c.toDataURL("image/jpeg",.8);
+  $("camShot").src=shot;$("camShot").hidden=false;$("camVideo").hidden=true;$("camGuide").hidden=true;
+  $("camLive").hidden=true;$("camReview").hidden=false;
+};
+$("camRetake").onclick=showLive;
+$("camUse").onclick=()=>{setPhoto(shot);closeCamera();toast("Surat joylandi")};
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&!$("camModal").hidden)closeCamera()});
+$("photo").addEventListener("change",e=>handlePhoto(e.target));
+function handlePhoto(inp){
+  const file=inp.files[0];inp.value="";if(!file)return;
+  const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{
+    const S=260,c=document.createElement("canvas");c.width=c.height=S;const x=c.getContext("2d");
+    const m=Math.min(img.width,img.height);x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);
+    setPhoto(c.toDataURL("image/jpeg",.75))};img.onerror=()=>toast("Bu suratni ochib bo‘lmadi");img.src=r.result};
+  r.readAsDataURL(file);
+}
+$("form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const first=$("first").value.trim(),last=$("last").value.trim(),year=parseInt($("year").value,10),fee=parseInt($("fee").value,10);
+  const joined=$("joined").value||MKEY;let msg="";
+  if(!first||!last)msg="Ism va familiyani kiriting.";
+  else if(!year||year<1990||year>CY)msg=`Tug‘ilgan yilni 1990–${CY} oralig‘ida kiriting.`;
+  else if(isNaN(fee)||fee<0)msg="Oylik to‘lov summasini kiriting.";
+  if(msg){$("err").textContent=msg;$("err").hidden=false;return}
+  const old=students.find(s=>s.id===editId);
+  const payments={...(old?.payments||{})};if($("pay").value==="1")payments[MKEY]=true;else delete payments[MKEY];
+  const data={first,last,year,fee,joined,photo:photoData||"",payments,createdAt:old?.createdAt||Date.now()};
+  const id=editId||("s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+  $("saveBtn").disabled=true;
+  try{await store.save(id,data);$("sheetScrim").hidden=true;toast(editId?"O‘zgarishlar saqlandi":"O‘quvchi qo‘shildi")}
+  catch(err){$("err").textContent="Saqlanmadi. Internetni tekshirib, qayta urinib ko‘ring.";$("err").hidden=false}
+  $("saveBtn").disabled=false;
+});
+
+startFirebase();
+if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+
+let tt;function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,2000)}
+</script>
+</body>
+</html>
