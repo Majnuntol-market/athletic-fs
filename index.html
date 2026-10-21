@@ -731,7 +731,19 @@ startFirebase();
     addEventListener("appinstalled",close);
   }
 })();
-if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+if("serviceWorker" in navigator){
+  const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    /* yangi versiya keldi: hech qanday oyna ochiq bo‘lmasa, sahifani yangilaymiz */
+    if(!hadCtl||reloaded)return;
+    const busy=!$("sheetScrim").hidden||!$("payScrim").hidden||!$("camModal").hidden||!$("confirmScrim").hidden;
+    if(busy){toast("Yangi versiya tayyor — ilovani qayta oching");return}
+    reloaded=true;location.reload();
+  });
+  addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>{
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden)r.update().catch(()=>{})});
+  }).catch(()=>{}));
+}
 
 let tt;function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,2000)}
 </script>

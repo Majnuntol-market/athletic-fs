@@ -1,4 +1,4 @@
-const CACHE = "afs-pro-v8";
+const CACHE = "afs-pro-v9";
 const CORE = ["./", "index.html", "firebase-config.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 const CDN = ["www.gstatic.com", "fonts.googleapis.com", "fonts.gstatic.com"];
 self.addEventListener("install", e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())));
@@ -10,7 +10,7 @@ self.addEventListener("fetch", e => {
   const same = url.origin === self.location.origin;
   if (!same && !CDN.includes(url.hostname)) return; // Firebase bazasi so'rovlari keshlanmaydi
   if (same) { // o'z fayllari: avval internet, bo'lmasa kesh
-    e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE).then(k => k.put(e.request, c)); return r; })
+    e.respondWith(fetch(e.request, { cache: "no-cache" }).then(r => { const c = r.clone(); caches.open(CACHE).then(k => k.put(e.request, c)); return r; })
       .catch(() => caches.match(e.request).then(h => h || caches.match("index.html"))));
     return;
   }
