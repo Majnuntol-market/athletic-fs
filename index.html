@@ -142,6 +142,12 @@ label{font-size:13px;font-weight:700}
 .confirm p{margin:0 0 16px;color:var(--muted)}
 .toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:50;white-space:nowrap}
 .note{font-size:12px;color:var(--muted);margin-top:14px}
+.install{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:80;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:520px;margin:0 auto}
+.install h4{margin:0 0 8px;font:800 15px var(--f-body);display:flex;gap:10px;align-items:center}
+.install ol{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px}
+.install .row{display:flex;gap:10px;margin-top:12px}
+.install .row button{flex:1}
+.shareico{display:inline-block;width:18px;height:18px;vertical-align:-3px;color:#0a84ff}
 @media (max-width:360px){.form{grid-template-columns:1fr}.stat .v{font-size:20px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* in-app camera */
@@ -277,6 +283,11 @@ label{font-size:13px;font-weight:700}
   </form>
 </div>
 
+<div class="install" id="installBox" hidden role="dialog" aria-labelledby="instT">
+  <h4 id="instT"><span class="badge" style="width:30px;height:30px;font-size:14px;border-radius:8px">A</span>Telefonga o‘rnating</h4>
+  <ol id="instSteps"></ol>
+  <div class="row"><button type="button" id="instLater">Keyinroq</button><button type="button" class="primary" id="instGo" hidden>O‘rnatish</button></div>
+</div>
 <div class="toast" id="toast" hidden></div>
 
 <script src="firebase-config.js"></script>
@@ -552,6 +563,32 @@ $("form").addEventListener("submit",async e=>{
 });
 
 startFirebase();
+/* install hint */
+(function(){
+  const standalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+  if(standalone)return;
+  let dismissed=false;try{dismissed=localStorage.getItem("afs_inst_off")==="1"}catch(e){}
+  if(dismissed)return;
+  const ua=navigator.userAgent, ios=/iPhone|iPad|iPod/.test(ua)||(ua.includes("Mac")&&navigator.maxTouchPoints>1);
+  const inApp=/Telegram|Instagram|FBAN|FBAV|Line\/|wv\)|CriOS|FxiOS/.test(ua)&&ios;
+  const share='<svg class="shareico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+  const box=$("installBox"), steps=$("instSteps");
+  const close=()=>{box.hidden=true;try{localStorage.setItem("afs_inst_off","1")}catch(e){}};
+  $("instLater").onclick=()=>{box.hidden=true};
+  if(ios){
+    steps.innerHTML=inApp
+      ?'<li>Bu sahifani <b>Safari</b>’da oching: yuqoridagi <b>⋯</b> → <b>«Safari’da ochish»</b>.</li><li>Keyin pastdagi '+share+' <b>Ulashish</b> tugmasini bosing.</li><li><b>«На экран «Домой»» / «Add to Home Screen»</b> → <b>Qo‘shish</b>.</li>'
+      :'<li>Pastdagi '+share+' <b>Ulashish</b> tugmasini bosing.</li><li>Ro‘yxatdan <b>«На экран «Домой»»</b> (Add to Home Screen) ni tanlang.</li><li><b>Qo‘shish</b> (Добавить) ni bosing. Ekranda <b>Athletic FS</b> ikonkasi paydo bo‘ladi.</li>';
+    setTimeout(()=>box.hidden=false,1200);
+  }else{
+    let deferred=null;
+    addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;
+      steps.innerHTML='<li><b>O‘rnatish</b> tugmasini bosing — ilova telefon ekraniga qo‘shiladi.</li>';
+      $("instGo").hidden=false;box.hidden=false});
+    $("instGo").onclick=async()=>{if(!deferred)return;deferred.prompt();const r=await deferred.userChoice;deferred=null;if(r.outcome==="accepted")close();else box.hidden=true};
+    addEventListener("appinstalled",close);
+  }
+})();
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 
 let tt;function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,2000)}
